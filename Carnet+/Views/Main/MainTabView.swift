@@ -35,7 +35,7 @@ struct MainTabView: View {
                 }
         }
         // Color oficial para resaltar la navegación (puedes usar el de la UACH)
-        .tint(Color("uachs"))
+        .tint(Color("uach"))
     }
 }
 
