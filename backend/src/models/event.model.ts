@@ -1,9 +1,9 @@
 import { Schema, model}  from "mongoose";
 import type { IEvent } from "../interfaces/event.interface";
-import { Category } from "../enums/-category.enum";
+import { Category } from "../enums/event-category.enum";
 
 
-const eventSchema = new Schema(
+const eventSchema = new Schema<IEvent>(
     {
     title: {
         type: String,
