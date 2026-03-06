@@ -10,6 +10,13 @@ const eventSchema = new Schema<IEvent>(
         required: true,
         trim: true,
     },
+    eventCode: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        uppercase: true,
+    },
     category: {
         type: String,
         required: true,

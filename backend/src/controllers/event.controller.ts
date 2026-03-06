@@ -6,6 +6,10 @@ type IdParams = {
     id: string;
 };
 
+type CodeParams = {
+    eventCode: string;
+};
+
 export async function getEvents(_req: Request, res: Response) {
     try {
         const events = await eventService.getAllEvents();
@@ -18,12 +22,12 @@ export async function getEvents(_req: Request, res: Response) {
     }
 }
 
-export async function getEvent(req: Request<IdParams>, res: Response){
+export async function getEventByID(req: Request<IdParams>, res: Response){
     try {
         const { id } = req.params;
         if (!id){
             return res.status(404).json({
-                message: "Event not found",
+                message: "Id is required",
             })
         }
 
@@ -31,7 +35,7 @@ export async function getEvent(req: Request<IdParams>, res: Response){
 
         if (!event){
             return res.status(400).json({
-                message: "id is required",
+                message: "Event not found",
             })
         }
 
@@ -41,6 +45,33 @@ export async function getEvent(req: Request<IdParams>, res: Response){
         console.error("Error getting event: ", error);
         return res.status(500).json({
             message: "Internal Server Error",
+        });
+    }
+}
+
+export async function getEventByCode(req: Request<CodeParams>, res: Response) {
+    try {
+        const { eventCode } = req.params;
+
+        if (!eventCode){
+            return res.status(404).json({
+                message: "Event Code is required",
+            });
+        }
+
+        const event = eventService.getEventByCode(eventCode);
+
+        if (!event){
+            return res.status(400).json({
+                message: "Event not found",
+            });
+        }
+
+        return res.json(event)
+    } catch (error) {
+        console.error("Error getting event: ", error);
+        return res.status(500).json({
+            message: "Internal server Error",
         });
     }
 }
@@ -83,10 +114,30 @@ export async function createNewEvent(req: Request, res: Response){
     }
 }
 
-export async function reserveEventSpot(req: Request<IdParams>, res: Response){
+export async function reserveEventSpotByID(req: Request<IdParams>, res: Response){
     try {
         const { id } = req.params;
-        const updatedEvent = await eventService.reserveSpot(id);
+        const updatedEvent = await eventService.reserveSpotByID(id);
+
+        if (!updatedEvent) {
+            return res.status(409).json({
+                message: "Event full or does not exist",
+            });
+        }
+
+        return res.json(updatedEvent);
+    } catch (error) {
+        console.error("Error reserving spot: ", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        })
+    }
+}
+
+export async function reserveEventSpotByEventCode(req: Request<CodeParams>, res: Response){
+    try {
+        const { eventCode } = req.params;
+        const updatedEvent = await eventService.reserveSpotByEventCode(eventCode);
 
         if (!updatedEvent) {
             return res.status(409).json({
