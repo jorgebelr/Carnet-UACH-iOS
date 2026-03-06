@@ -13,10 +13,10 @@ const router = Router()
 
 router.get("/", getEvents);
 router.get("/id/:id", getEventByID);
-router.get("/eventCode/:code", getEventByCode);
+router.get("/eventCode/:eventCode", getEventByCode);
 router.post("/", createNewEvent)
-router.post("/id/:id/reserve", reserveEventSpotByID)
-router.post("/eventcCode/:code/reserve", reserveEventSpotByEventCode)
+router.post("/id/reserve/:id", reserveEventSpotByID)
+router.post("/eventcCode/reserve/:eventCode", reserveEventSpotByEventCode)
 
 
 export default router
