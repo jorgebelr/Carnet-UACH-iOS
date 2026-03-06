@@ -1,13 +1,10 @@
-import { Document } from "mongoose";
 import { Category } from "../enums/event-category.enum";
 
-export interface IEvent extends Document {
+
+export interface CreateEventInput {
     title: string;
     category: Category;
     description?: string;
     date: Date;
     maxCapacity: number;
-    reservedCount: number;
-    createdAt: Date;
-    updatedAt: Date;
 }
