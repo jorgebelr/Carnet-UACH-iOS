@@ -10,6 +10,7 @@ type CodeParams = {
     eventCode: string;
 };
 
+// Obtener todos los eventos
 export async function getEvents(_req: Request, res: Response) {
     try {
         const events = await eventService.getAllEvents();
@@ -22,6 +23,7 @@ export async function getEvents(_req: Request, res: Response) {
     }
 }
 
+// Obtener un evento en especifico por su _id de mongo
 export async function getEventByID(req: Request<IdParams>, res: Response){
     try {
         const { id } = req.params;
@@ -31,7 +33,7 @@ export async function getEventByID(req: Request<IdParams>, res: Response){
             })
         }
 
-        const event = eventService.getEventByID(id);
+        const event = await eventService.getEventByID(id);
 
         if (!event){
             return res.status(400).json({
@@ -49,6 +51,7 @@ export async function getEventByID(req: Request<IdParams>, res: Response){
     }
 }
 
+// Obtener un evento por su codigo de evento
 export async function getEventByCode(req: Request<CodeParams>, res: Response) {
     try {
         const { eventCode } = req.params;
@@ -78,6 +81,8 @@ export async function getEventByCode(req: Request<CodeParams>, res: Response) {
     }
 }
 
+
+// Crear un nuevo evento
 export async function createNewEvent(req: Request, res: Response){
     try{
         const { title, category, description, date, maxCapacity} = req.body
@@ -116,6 +121,8 @@ export async function createNewEvent(req: Request, res: Response){
     }
 }
 
+
+// Reservar un evento por medio del _id de mongo
 export async function reserveEventSpotByID(req: Request<IdParams>, res: Response){
     try {
         const { id } = req.params;
@@ -136,6 +143,7 @@ export async function reserveEventSpotByID(req: Request<IdParams>, res: Response
     }
 }
 
+// Reservar un evento por medio de su codigo de evento
 export async function reserveEventSpotByEventCode(req: Request<CodeParams>, res: Response){
     try {
         const { eventCode } = req.params;
