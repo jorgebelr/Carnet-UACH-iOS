@@ -59,8 +59,10 @@ export async function getEventByCode(req: Request<CodeParams>, res: Response) {
             });
         }
 
-        const event = eventService.getEventByCode(eventCode);
+        const event = await eventService.getEventByCode(eventCode);
 
+        console.log(event)
+;
         if (!event){
             return res.status(400).json({
                 message: "Event not found",
