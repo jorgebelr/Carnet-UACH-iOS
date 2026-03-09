@@ -46,3 +46,6 @@ const eventSchema = new Schema<IEvent>(
 );
 
 export const EventModel = model<IEvent>("Event", eventSchema)
+
+// place
+// estalimitado
