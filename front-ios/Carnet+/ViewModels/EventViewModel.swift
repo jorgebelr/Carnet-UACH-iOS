@@ -18,34 +18,40 @@ class EventViewModel: ObservableObject {
     @Published var showAlert: Bool = false
 
     init() {
-        loadSampleData()
+        load()
     }
+    
+    func load() {
+        if FileManager.default.fileExists(atPath: savePath.path) {
+                    do {
+                        let data = try Data(contentsOf: savePath)
+                        allEvents = try JSONDecoder().decode([Evento].self, from: data)
+                    } catch {
+                        print("Error al decodificar: \(error)")
+                        loadSampleData()
+                    }
+                } else {
+                    // HCI: Primera vez que se abre la app
+                    loadSampleData()
+                }
+    }
+    
+    func save() {
+            do {
+                let data = try JSONEncoder().encode(allEvents)
+                try data.write(to: savePath, options: [.atomic, .completeFileProtection])
+            } catch {
+                print("Error al guardar: \(error)")
+            }
+        }
 
-    /// Carga datos iniciales para pruebas del equipo (Jorge, Martín, Allan, Rogelio, Marco).
-    func loadSampleData() {
-        self.allEvents = [
-            Evento(
-                nombre: "Torneo Inter-UACH",
-                descripcion: "Final de básquetbol en el nido de los Dorados.",
-                fecha: .now.addingTimeInterval(3600),
-                lugar: "Gimnasio UACH",
-                categoria: .deportivo,
-                esCupoLimitado: true,
-                cupoMaximo: 20,
-                cupoActual: 5,
-                estaGuardado: true
-            ),
-            Evento(
-                nombre: "Concierto Sinfónica",
-                descripcion: "Música clásica en vivo para el carnet cultural.",
-                fecha: .now.addingTimeInterval(86400),
-                lugar: "Paraninfo",
-                categoria: .artistico,
-                esCupoLimitado: false,
-                estaGuardado: true
-            )
-        ]
-    }
+    /// Solo se llama si no hay un archivo guardado previo
+        func loadSampleData() {
+            self.allEvents = [
+                Evento(nombre: "Torneo Inter-UACH", descripcion: "Básquetbol.", fecha: .now.addingTimeInterval(3600), lugar: "Gimnasio", categoria: .deportivo, esCupoLimitado: true, cupoMaximo: 20, cupoActual: 5, estaGuardado: false), // Cambiado a false por defecto
+                Evento(nombre: "Concierto Sinfónica", descripcion: "Música.", fecha: .now.addingTimeInterval(86400), lugar: "Paraninfo", categoria: .artistico, esCupoLimitado: false, estaGuardado: false)
+            ]
+        }
 
     /// Registra al alumno en un evento verificando disponibilidad.
     func registerToEvent(eventID: UUID) {
@@ -58,6 +64,13 @@ class EventViewModel: ObservableObject {
         } else {
             alertMessage = "Evento lleno"
             showAlert = true
+        }
+    }
+    
+    func addToWallet(_ evento: Evento) {
+        if let index = allEvents.firstIndex(where: { $0.id == evento.id }) {
+            allEvents[index].estaGuardado = true
+            save()
         }
     }
     
@@ -85,4 +98,51 @@ class EventViewModel: ObservableObject {
     var upcomingStories: [Evento] {
         return allEvents
     }
+    
+    /// Simulación: total de eventos asistidos
+    var eventsAttended: Int { 5 } // Valor simulado, puedes modificar la lógica luego
+    
+    // MARK: - Persistencia (HCI: Prevención de pérdida de datos)
+
+    private let savePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedEvents")
+    
+    /// Cambia el estado y guarda inmediatamente
+        func toggleSave(for eventID: UUID) {
+            if let index = allEvents.firstIndex(where: { $0.id == eventID }) {
+                allEvents[index].estaGuardado.toggle()
+                save() // HCI: Feedback inmediato y persistente
+            }
+        }
+    
+    /// Simula la asistencia al evento (esto lo haría el escáner del encargado).
+    func checkIn(eventID: UUID) {
+        if let index = allEvents.firstIndex(where: { $0.id == eventID }) {
+            allEvents[index].fueAsistido = true
+            save()
+        }
+    }
+    
+    
+    // MARK: Funciones de calendario
+    
+    // función para visualizar en el calendario dias con eventos
+    func hasEvent(on date: Date) -> Bool {
+        allEvents.contains {
+            Calendar.current.isDate($0.fecha, inSameDayAs: date)
+        }
+    }
+    
+    // Que eventos hay en un dia
+    func events(on date: Date) -> [Evento] {
+        allEvents.filter {
+            Calendar.current.isDate($0.fecha, inSameDayAs: date)
+        }
+    }
+    
+    // Ver los colores de esos eventos
+    func eventColors(on date: Date) -> [Color] {
+        events(on: date)
+            .map { $0.categoria.color }
+    }
 }
+
