@@ -54,10 +54,14 @@ struct HomeView: View {
                             .padding(.top, 40)
                         } else {
                             // Reutilizamos el EventRow que definimos antes
-                            ForEach(viewModel.walletEvents) { evento in
-                                EventRow(evento: evento)
-                                    .padding(.horizontal)
-                                Divider().padding(.horizontal)
+                                ForEach(viewModel.walletEvents) { evento in
+                                    NavigationLink(destination: EventDetailView(evento: evento)) {
+                                        EventRow(evento: evento)
+                                            .padding(.horizontal)
+                                    }
+                                    .buttonStyle(.plain) // Evita que el renglón se ponga azul por ser un link
+                                    
+                                    Divider().padding(.horizontal)
                             }
                         }
                     }
