@@ -83,15 +83,18 @@ struct EventDetailView: View {
                         }
                         
                         // Botón de Guardar (Siempre presente)
-                        Button(action: { /* Lógica para guardar */ }) {
+                        Button(action: {
+                            viewModel.toggleSave(for: evento.id)
+                        }) {
                             Label(evento.estaGuardado ? "Guardado" : "Guardar Evento",
                                   systemImage: evento.estaGuardado ? "bookmark.fill" : "bookmark")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.blue, lineWidth: 2)
-                            )
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(evento.estaGuardado ? Color.blue.opacity(0.1) : Color.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.blue, lineWidth: 2)
+                                )
                         }
                     }
                     .padding()

@@ -58,6 +58,7 @@ struct HomeView: View {
                                     NavigationLink(destination: EventDetailView(evento: evento)) {
                                         EventRow(evento: evento)
                                             .padding(.horizontal)
+                                            .contentShape(Rectangle())
                                     }
                                     .buttonStyle(.plain) // Evita que el renglón se ponga azul por ser un link
                                     
