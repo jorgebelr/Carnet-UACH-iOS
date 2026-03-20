@@ -37,6 +37,9 @@ const eventSchema = new Schema<IEvent>(
             type: Boolean,
             required: true,
         },
+        imageUrl: {
+            type: String,   
+        },
         maxCapacity: {
             type: Number,
             min: 1,
@@ -53,6 +56,3 @@ const eventSchema = new Schema<IEvent>(
 );
 
 export const EventModel = model<IEvent>("Event", eventSchema)
-
-// place
-// estalimitado

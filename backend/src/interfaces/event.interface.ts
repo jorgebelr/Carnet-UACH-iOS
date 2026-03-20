@@ -11,6 +11,7 @@ export interface IEvent extends Document {
     isLimited: boolean;
     maxCapacity: number;
     reservedCount: number;
+    imageUrl?: string
     createdAt: Date;
     updatedAt: Date;
 }

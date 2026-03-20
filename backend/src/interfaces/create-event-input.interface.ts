@@ -7,6 +7,7 @@ export interface CreateEventInput {
     place: string;
     description?: string;
     date: Date;
+    imageUrl?: string;
     isLimited: boolean;
     maxCapacity: number;
 }
