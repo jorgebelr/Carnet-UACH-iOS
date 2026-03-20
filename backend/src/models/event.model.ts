@@ -1,48 +1,58 @@
-import { Schema, model}  from "mongoose";
+import { Schema, model } from "mongoose";
 import type { IEvent } from "../interfaces/event.interface";
 import { Category } from "../enums/event-category.enum";
 
 
 const eventSchema = new Schema<IEvent>(
     {
-    title: {
-        type: String,
-        required: true,
-        trim: true,
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        eventCode: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            uppercase: true,
+        },
+        category: {
+            type: String,
+            required: true,
+            enum: Object.values(Category),
+        },
+        place: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+        },
+        date: {
+            type: Date,
+            required: true,
+        },
+        isLimited: {
+            type: Boolean,
+            required: true,
+        },
+        imageUrl: {
+            type: String,   
+        },
+        maxCapacity: {
+            type: Number,
+            min: 1,
+        },
+        reservedCount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
     },
-    eventCode: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        uppercase: true,
-    },
-    category: {
-        type: String,
-        required: true,
-        enum: Object.values(Category),
-    },
-    description: {
-        type: String,
-    },
-    date: {
-        type: Date,
-        required: true,
-    },
-    maxCapacity: {
-        type: Number,
-        required: true,
-        min: 1,
-    },
-    reservedCount: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-},
-{
-    timestamps: true
-}
+    {
+        timestamps: true
+    }
 );
 
 export const EventModel = model<IEvent>("Event", eventSchema)
