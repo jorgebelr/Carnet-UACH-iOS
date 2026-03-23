@@ -9,12 +9,14 @@ import {
     reserveEventSpotByEventCode,
 } from "../controllers/event.controller"
 
+import { uploadEventImage } from "../middlewares/upload.middleware";
+
 const router = Router()
 
 router.get("/", getEvents);
 router.get("/id/:id", getEventByID);
 router.get("/eventCode/:eventCode", getEventByCode);
-router.post("/", createNewEvent)
+router.post("/", uploadEventImage.single("image"), createNewEvent)
 router.post("/id/reserve/:id", reserveEventSpotByID)
 router.post("/eventcCode/reserve/:eventCode", reserveEventSpotByEventCode)
 

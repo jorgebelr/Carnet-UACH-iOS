@@ -8,5 +8,6 @@ export interface UpdateEventInput {
     description?: string;
     date?: Date;
     isLimited?: boolean;
+    imageUrl?: string;
     maxCapacity?: number;
 }
