@@ -244,3 +244,24 @@ export async function reserveEventSpotByCode(req: Request<CodeParams>, res: Resp
         })
     }
 }
+
+// Quitar reservacion por medio de su codigo de evento
+export async function unreserveEventSpotByEventCode(req: Request<CodeParams>, res: Response) {
+    try {
+        const { eventCode } = req.params;
+        const updatedEvent = await eventService.unreserveSpotByEventCode(eventCode);
+
+        if (!updatedEvent) {
+            return res.status(400).json({
+                message: "Event does not exist or has no reservations",
+            });
+        }
+
+        return res.json(updatedEvent);
+    } catch (error) {
+        console.error("Error unreserving spot: ", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+}

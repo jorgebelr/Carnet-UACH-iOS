@@ -6,21 +6,21 @@ import { generateEventCode } from "../utils/generate-event-code";
 
 // Obtener todos los eventos
 export async function getAllEvents() {
-    return await EventModel.find().sort( { date: 1 });
+    return await EventModel.find().sort({ date: -1 });
 }
 
 // Obtener un evento por su _id de mongo
-export async function getEventByID(id: string){
+export async function getEventByID(id: string) {
     return await EventModel.findById(id);
 }
 
 // Obtener un evento por su codigo de evento
-export  async function getEventByCode(eventCode: String) {
-    return await EventModel.findOne( { eventCode });
+export async function getEventByCode(eventCode: String) {
+    return await EventModel.findOne({ eventCode });
 }
 
 // Editar un evento por medio de su codigo de evento
-export async function updateEventByCode(eventCode: string, data: UpdateEventInput){
+export async function updateEventByCode(eventCode: string, data: UpdateEventInput) {
     return await EventModel.findOneAndUpdate(
         { eventCode },
         { $set: data },
@@ -35,15 +35,15 @@ async function generateUniqueEventCode(category: Category): Promise<string> {
 
     while (exists) {
         eventCode = generateEventCode(category);
-        const existingEvent = await EventModel.findOne( { eventCode });
+        const existingEvent = await EventModel.findOne({ eventCode });
         exists = !!existingEvent;
     }
-    
+
     return eventCode;
 }
 
 // Crear un evento
-export async function createEvent( data: CreateEventInput){
+export async function createEvent(data: CreateEventInput) {
     const eventCode = await generateUniqueEventCode(data.category);
     return await EventModel.create({
         ...data,
@@ -52,7 +52,7 @@ export async function createEvent( data: CreateEventInput){
 }
 
 // Reservar un lugar en el evento por medio del _id de mongo
-export async function reserveSpotByID(eventId: string){
+export async function reserveSpotByID(eventId: string) {
     return await EventModel.findOneAndUpdate(
         {
             _id: eventId,
@@ -68,7 +68,7 @@ export async function reserveSpotByID(eventId: string){
 }
 
 // Reservar un lugar en el evento por medio del codigo de evento
-export async function reserveSpotByEventCode(eventCode: string){
+export async function reserveSpotByEventCode(eventCode: string) {
     return await EventModel.findOneAndUpdate(
         {
             eventCode,
@@ -80,5 +80,22 @@ export async function reserveSpotByEventCode(eventCode: string){
         {
             new: true
         }
+    );
+}
+
+// Quitar reservacion por codigo de evento
+export async function unreserveSpotByEventCode(eventCode: string) {
+    return await EventModel.findOneAndUpdate(
+
+        {
+            eventCode,
+            $expr: { $gt: ["$reservedCount", 0] },
+        },
+        {
+            $inc: { reservedCount: -1 }
+        },
+        {
+            new: true
+        },
     );
 }
