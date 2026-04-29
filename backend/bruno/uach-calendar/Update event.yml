@@ -1,0 +1,35 @@
+info:
+  name: Update event
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:3000/events/eventCode/:eventCode
+  params:
+    - name: eventCode
+      value: SCI-89HJL4
+      type: path
+  body:
+    type: multipart-form
+    data:
+      - name: title
+        type: text
+        value: Conferencia formando castores
+      - name: image
+        type: file
+        value:
+          - /Users/martinchacon/Downloads/Captura de pantalla 2026-02-13 a la(s) 8.20.31 p.m..png
+      - name: place
+        type: text
+        value: Auditorio aguilera baca
+      - name: description
+        type: text
+        value: Para morritos que vana. anetrar a a uach
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

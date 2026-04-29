@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import * as eventService from "../services/event.service"
 import { Category } from "../enums/event-category.enum";
+import type { UpdateEventInput } from "../interfaces/update-event-input.interface";
+import fs from "fs";
+import path from "path";
 
 type IdParams = {
     id: string;
@@ -141,23 +144,56 @@ export async function updateEventByCode(req: Request<CodeParams>, res: Response)
             });
         }
 
-        const event = await eventService.updateEventByCode(eventCode, {
-            title,
-            category,
-            place,
-            description,
-            date: new Date(date),
-            isLimited: Boolean(isLimited),
-            maxCapacity: Number(maxCapacity),
-        });
+        if (isLimited === true && maxCapacity !== undefined && Number(maxCapacity) < 1) {
+            return res.status(400).json({
+                message: "maxCapacity must be greater than 0 when event is limited"
+            })
+        }
 
-        if (!event) {
+        const currentEvent = await eventService.getEventByCode(eventCode);
+
+        if (!currentEvent) {
             return res.status(404).json({
                 message: "Event not found",
             });
         }
 
-        return res.json(event);
+        if (maxCapacity !== undefined && Number(maxCapacity) < currentEvent.reservedCount) {
+            return res.status(400).json({
+                message: "maxCapacity must be greater than or equal to the number of reserved spots",
+            })
+        }
+
+        const updateData: UpdateEventInput = {};
+
+        if (title !== undefined) updateData.title = title;
+        if (place !== undefined) updateData.place = place;
+        if (description !== undefined) updateData.description = description;
+        if (date !== undefined) updateData.date = new Date(date);
+        if (isLimited !== undefined) updateData.isLimited = Boolean(isLimited);
+        if (maxCapacity !== undefined) updateData.maxCapacity = Number(maxCapacity);
+
+        if (req.file) {
+            const newImageUrl = `uploads/events/${req.file.filename}`;
+            updateData.imageUrl = newImageUrl;
+
+            if (currentEvent.imageUrl) {
+                const oldImagePath = path.join(process.cwd(), currentEvent.imageUrl);
+
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) console.error("error deleting old image: ", err)
+                })
+            }
+        }
+        const updatedEvent = await eventService.updateEventByCode(eventCode, updateData);
+
+        if (!updatedEvent) {
+            return res.status(404).json({
+                message: "Event not found",
+            });
+        }
+
+        return res.json(updatedEvent);
     } catch (error) {
         console.error("Error updating event: ", error);
         return res.status(500).json({
@@ -189,7 +225,7 @@ export async function reserveEventSpotByID(req: Request<IdParams>, res: Response
 }
 
 // Reservar un evento por medio de su codigo de evento
-export async function reserveEventSpotByEventCode(req: Request<CodeParams>, res: Response) {
+export async function reserveEventSpotByCode(req: Request<CodeParams>, res: Response) {
     try {
         const { eventCode } = req.params;
         const updatedEvent = await eventService.reserveSpotByEventCode(eventCode);
