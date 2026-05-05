@@ -104,7 +104,7 @@ export async function createNewEvent(req: Request, res: Response) {
 
         let imageUrl: string | undefined = undefined;
         if (req.file) {
-            imageUrl = `upload/events/${req.file.filename}`;
+            imageUrl = `uploads/events/${req.file.filename}`;
         }
 
         const event = await eventService.createEvent({
@@ -260,6 +260,38 @@ export async function unreserveEventSpotByEventCode(req: Request<CodeParams>, re
         return res.json(updatedEvent);
     } catch (error) {
         console.error("Error unreserving spot: ", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+}
+
+// Eliminar un evento por su codigo de evento
+export async function deleteEventByCode(req: Request<CodeParams>, res: Response) {
+    try {
+        const { eventCode } = req.params;
+        const deletedEvent = await eventService.deleteEventByCode(eventCode);
+
+        if (!deletedEvent) {
+            return res.status(404).json({
+                message: "Event not found",
+            });
+        }
+
+        // Eliminar la imagen si existe
+        if (deletedEvent.imageUrl) {
+            const imagePath = path.join(process.cwd(), deletedEvent.imageUrl);
+            fs.unlink(imagePath, (err) => {
+                if (err) console.error("Error deleting image: ", err);
+            });
+        }
+
+        return res.json({
+            message: "Event deleted successfully",
+            event: deletedEvent,
+        });
+    } catch (error) {
+        console.error("Error deleting event: ", error);
         return res.status(500).json({
             message: "Internal server error",
         });
