@@ -9,6 +9,7 @@ import {
     reserveEventSpotByCode,
     updateEventByCode,
     unreserveEventSpotByEventCode,
+    deleteEventByCode,
 } from "../controllers/event.controller"
 
 import { uploadEventImage } from "../middlewares/upload.middleware";
@@ -23,5 +24,6 @@ router.post("/id/reserve/:id", reserveEventSpotByID);
 router.post("/eventcCode/reserve/:eventCode", reserveEventSpotByCode);
 router.patch("/eventCode/unreserve/:eventCode", unreserveEventSpotByEventCode);
 router.patch("/eventCode/:eventCode", uploadEventImage.single("image"), updateEventByCode);
+router.delete("/eventCode/:eventCode", deleteEventByCode);
 
 export default router

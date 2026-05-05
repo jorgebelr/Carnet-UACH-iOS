@@ -99,3 +99,8 @@ export async function unreserveSpotByEventCode(eventCode: string) {
         },
     );
 }
+
+// Eliminar un evento por su codigo de evento
+export async function deleteEventByCode(eventCode: string) {
+    return await EventModel.findOneAndDelete({ eventCode });
+}
