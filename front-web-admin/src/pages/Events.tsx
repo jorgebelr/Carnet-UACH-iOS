@@ -254,10 +254,12 @@ const EventsCRUD = () => {
                     <MapPin size={16} />
                     {event.place}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Users size={16} />
-                    {event.reservedCount} / {event.maxCapacity} lugares
-                  </div>
+                  {event.isLimited && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Users size={16} />
+                      {event.reservedCount} / {event.maxCapacity} lugares
+                    </div>
+                  )}
                 </div>
               </div>
 
