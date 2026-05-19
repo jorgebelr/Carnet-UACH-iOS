@@ -11,13 +11,25 @@ struct StoryView: View {
     let evento: Evento
     @Binding var isPresented: Bool // Esta variable permite que la historia se cierre sola
     @EnvironmentObject var viewModel: EventViewModel
+
+    // Índice actual dentro de las historias (próximos eventos)
+    @State private var currentIndex: Int = 0
+
+    // Acceso rápido a la lista de historias
+    private var stories: [Evento] { viewModel.upcomingStories }
+
+    // Evento actual mostrado
+    private var currentEvent: Evento {
+        guard stories.indices.contains(currentIndex) else { return evento }
+        return stories[currentIndex]
+    }
     
     var body: some View {
         ZStack {
             // 1. FONDO: Efecto difuminado (HCI: Estética y Enfoque)
             // Usamos el color de la categoría con un degradado para que se vea elegante
             LinearGradient(
-                colors: [evento.categoria.color.opacity(0.8), .black],
+                colors: [currentEvent.categoria.color.opacity(0.8), .black],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -49,21 +61,21 @@ struct StoryView: View {
                 
                 // 3. INFORMACIÓN CENTRAL
                 VStack(spacing: 15) {
-                    Text(evento.categoria.nombre.uppercased())
+                    Text(currentEvent.categoria.nombre.uppercased())
                         .font(.caption.bold())
                         .kerning(2) // CORRECCIÓN: Antes era letterSpacing
                         .padding(.vertical, 4) // Ahora Xcode sí entenderá esto
                         .padding(.horizontal, 12)
-                        .background(evento.categoria.color)
+                        .background(currentEvent.categoria.color)
                         .foregroundColor(.white)
                         .cornerRadius(5)
                     
-                    Text(evento.nombre)
+                    Text(currentEvent.nombre)
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
-                    Text(evento.descripcion)
+                    Text(currentEvent.descripcion)
                         .font(.title3)
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
@@ -74,7 +86,7 @@ struct StoryView: View {
                 
                 // 4. BOTÓN DE ACCIÓN RÁPIDA (Registro Fácil)
                 Button(action: {
-                    // Aquí llamamos a la lógica de guardar
+                    viewModel.addToWallet(currentEvent)
                     isPresented = false
                 }) {
                     HStack {
@@ -92,6 +104,18 @@ struct StoryView: View {
                 .padding(.bottom, 50)
             }
             .padding(.horizontal)
+            
+            // Zonas de toque izquierda/derecha para navegar historias
+            HStack(spacing: 0) {
+                // Izquierda: anterior
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { goToPrevious() }
+                // Derecha: siguiente
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { goToNext() }
+            }
         }
         // GESTO: Deslizar hacia abajo para cerrar (HCI: Control del usuario)
         .gesture(
@@ -101,6 +125,35 @@ struct StoryView: View {
                 }
             }
         )
+        .onAppear { initializeIndex() }
+    }
+    
+    private func initializeIndex() {
+        if let idx = stories.firstIndex(where: { $0.id == evento.id }) {
+            currentIndex = idx
+        } else {
+            currentIndex = 0
+        }
+    }
+
+    private func goToNext() {
+        let next = currentIndex + 1
+        if next < stories.count {
+            currentIndex = next
+        } else {
+            // No hay más historias: cerrar
+            isPresented = false
+        }
+    }
+
+    private func goToPrevious() {
+        let prev = currentIndex - 1
+        if prev >= 0 {
+            currentIndex = prev
+        } else {
+            // No hay anterior: cerrar
+            isPresented = false
+        }
     }
 }
 

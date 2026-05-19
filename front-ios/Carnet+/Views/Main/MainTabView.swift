@@ -6,36 +6,47 @@
 //
 
 import SwiftUI
+import UIKit
+import AVFoundation
 
 struct MainTabView: View {
-    // Inicializamos el cerebro de la app aquí para que todas las pestañas lo compartan
     @StateObject private var viewModel = EventViewModel()
+    @State private var selectedTab = 0
+    
+    // Feedback generators
+    private let hapticGenerator = UIImpactFeedbackGenerator(style: .light)
+    private var player: AVAudioPlayer? = nil
     
     var body: some View {
-        TabView {
-            // Pestaña 1: Home (Historias y Próximos)
+        TabView(selection: $selectedTab) {
+            // Home Tab
             HomeView()
-                .environmentObject(viewModel) // Pasamos el cerebro
+                .environmentObject(viewModel)
                 .tabItem {
                     Label("Inicio", systemImage: "house.fill")
-                }
-            
-            // Pestaña 2: Calendario (Exploración con filtros)
+                }.tag(0)
+            // Calendar Tab
             CalendarView()
                 .environmentObject(viewModel)
                 .tabItem {
                     Label("Calendario", systemImage: "calendar")
-                }
-            
-            // Pestaña 3: Wallet (Boletos con QR)
+                }.tag(1)
+            // Wallet Tab
             WalletView()
                 .environmentObject(viewModel)
                 .tabItem {
                     Label("Mis Boletos", systemImage: "qrcode.viewfinder")
-                }
+                }.tag(2)
         }
-        // Color oficial para resaltar la navegación (puedes usar el de la UACH)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .tint(Color("uach"))
+        .onChange(of: selectedTab) {
+            // Haptic feedback
+            hapticGenerator.impactOccurred()
+            
+            // System sound feedback (short tap sound)
+            AudioServicesPlaySystemSound(1104) // 1104 is a standard tap sound
+        }
     }
 }
 

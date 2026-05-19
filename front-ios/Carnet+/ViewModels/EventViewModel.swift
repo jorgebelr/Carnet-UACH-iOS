@@ -8,43 +8,52 @@
 import SwiftUI
 import Combine
 
+/// ViewModel encargado de la lógica de negocio y filtrado de eventos.
+/// HCI: Centraliza la 'fuente de verdad' para mantener la consistencia en toda la app.
 class EventViewModel: ObservableObject {
     @Published var allEvents: [Evento] = []
     
-    // Estos son para las alertas de registro
+    // Propiedades para feedback al usuario (HCI: Visibilidad del estado)
     @Published var alertMessage: String = ""
     @Published var showAlert: Bool = false
 
     init() {
-        loadSampleData()
+        load()
     }
-
-    func loadSampleData() {
-        self.allEvents = [
-            Evento(
-                nombre: "Torneo Inter-UACH",
-                descripcion: "Competencia de básquetbol.",
-                fecha: .now.addingTimeInterval(3600),
-                lugar: "Gimnasio",
-                categoria: .deportivo, // Nombre actualizado
-                esCupoLimitado: true,
-                cupoMaximo: 20,
-                cupoActual: 5,
-                estaGuardado: true
-            ),
-            Evento(
-                nombre: "Concierto Sinfónica",
-                descripcion: "Música clásica en vivo.",
-                fecha: .now.addingTimeInterval(86400),
-                lugar: "Paraninfo",
-                categoria: .artistico, // Nombre actualizado
-                esCupoLimitado: false,
-                estaGuardado: true
-            )
-        ]
+    
+    func load() {
+        if FileManager.default.fileExists(atPath: savePath.path) {
+                    do {
+                        let data = try Data(contentsOf: savePath)
+                        allEvents = try JSONDecoder().decode([Evento].self, from: data)
+                    } catch {
+                        print("Error al decodificar: \(error)")
+                        loadSampleData()
+                    }
+                } else {
+                    // HCI: Primera vez que se abre la app
+                    loadSampleData()
+                }
     }
+    
+    func save() {
+            do {
+                let data = try JSONEncoder().encode(allEvents)
+                try data.write(to: savePath, options: [.atomic, .completeFileProtection])
+            } catch {
+                print("Error al guardar: \(error)")
+            }
+        }
 
-    // ESTA ES LA FUNCIÓN QUE XCODE NO ENCUENTRA
+    /// Solo se llama si no hay un archivo guardado previo
+        func loadSampleData() {
+            self.allEvents = [
+                Evento(nombre: "Torneo Inter-UACH", descripcion: "Básquetbol.", fecha: .now.addingTimeInterval(3600), lugar: "Gimnasio", categoria: .deportivo, esCupoLimitado: true, cupoMaximo: 20, cupoActual: 5, estaGuardado: false), // Cambiado a false por defecto
+                Evento(nombre: "Concierto Sinfónica", descripcion: "Música.", fecha: .now.addingTimeInterval(86400), lugar: "Paraninfo", categoria: .artistico, esCupoLimitado: false, estaGuardado: false)
+            ]
+        }
+
+    /// Registra al alumno en un evento verificando disponibilidad.
     func registerToEvent(eventID: UUID) {
         guard let index = allEvents.firstIndex(where: { $0.id == eventID }) else { return }
         
@@ -58,12 +67,82 @@ class EventViewModel: ObservableObject {
         }
     }
     
-    // Filtros para las vistas
-    var walletEvents: [Evento] {
-        allEvents.filter { $0.estaGuardado }
+    func addToWallet(_ evento: Evento) {
+        if let index = allEvents.firstIndex(where: { $0.id == evento.id }) {
+            allEvents[index].estaGuardado = true
+            save()
+        }
     }
     
+    // MARK: - Propiedades Computadas (Filtros Inteligentes)
+    
+    /// Eventos marcados como favoritos por el alumno.
+    var walletEvents: [Evento] {
+        return allEvents.filter { $0.estaGuardado }
+    }
+    
+    /// Boletos próximos: Guardados que aún no suceden y no han sido asistidos.
+    /// HCI: Reducción de carga cognitiva al mostrar solo lo relevante.
+    var activeTickets: [Evento] {
+        return allEvents.filter { $0.estaGuardado && !$0.fueAsistido }
+            .sorted { $0.fecha < $1.fecha }
+    }
+    
+    /// Historial: Eventos pasados o marcados como asistidos.
+    var ticketHistory: [Evento] {
+        return allEvents.filter { $0.fueAsistido || ($0.estaGuardado && $0.fecha < Date()) }
+            .sorted { $0.fecha > $1.fecha }
+    }
+    
+    /// Historias: Todos los eventos disponibles para el carrusel de inicio.
     var upcomingStories: [Evento] {
-        allEvents // Por ahora mandamos todos para probar
+        return allEvents
+    }
+    
+    /// Simulación: total de eventos asistidos
+    var eventsAttended: Int { 5 } // Valor simulado, puedes modificar la lógica luego
+    
+    // MARK: - Persistencia (HCI: Prevención de pérdida de datos)
+
+    private let savePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedEvents")
+    
+    /// Cambia el estado y guarda inmediatamente
+        func toggleSave(for eventID: UUID) {
+            if let index = allEvents.firstIndex(where: { $0.id == eventID }) {
+                allEvents[index].estaGuardado.toggle()
+                save() // HCI: Feedback inmediato y persistente
+            }
+        }
+    
+    /// Simula la asistencia al evento (esto lo haría el escáner del encargado).
+    func checkIn(eventID: UUID) {
+        if let index = allEvents.firstIndex(where: { $0.id == eventID }) {
+            allEvents[index].fueAsistido = true
+            save()
+        }
+    }
+    
+    
+    // MARK: Funciones de calendario
+    
+    // función para visualizar en el calendario dias con eventos
+    func hasEvent(on date: Date) -> Bool {
+        allEvents.contains {
+            Calendar.current.isDate($0.fecha, inSameDayAs: date)
+        }
+    }
+    
+    // Que eventos hay en un dia
+    func events(on date: Date) -> [Evento] {
+        allEvents.filter {
+            Calendar.current.isDate($0.fecha, inSameDayAs: date)
+        }
+    }
+    
+    // Ver los colores de esos eventos
+    func eventColors(on date: Date) -> [Color] {
+        events(on: date)
+            .map { $0.categoria.color }
     }
 }
+
